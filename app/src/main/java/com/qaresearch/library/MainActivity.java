@@ -2,7 +2,9 @@ package com.qaresearch.library;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -24,11 +26,9 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Main container
         FrameLayout container = new FrameLayout(this);
         container.setBackgroundColor(Color.WHITE);
 
-        // WebView
         webView = new WebView(this);
         webView.setBackgroundColor(Color.WHITE);
 
@@ -38,7 +38,6 @@ public class MainActivity extends Activity {
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
 
-        // Use the normal persistent WebView cache.
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         settings.setAllowFileAccess(true);
@@ -48,7 +47,6 @@ public class MainActivity extends Activity {
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
 
-        // Keep the WebView invisible until the first page is ready.
         webView.setVisibility(View.INVISIBLE);
 
         webView.setWebViewClient(new WebViewClient() {
@@ -58,17 +56,78 @@ public class MainActivity extends Activity {
                     WebView view,
                     WebResourceRequest request) {
 
+                String url = request.getUrl().toString();
+
+                // Open PDF files outside the WebView.
+                if (url.toLowerCase().endsWith(".pdf")) {
+
+                    try {
+                        Intent intent = new Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse(url)
+                        );
+
+                        startActivity(intent);
+
+                    } catch (Exception e) {
+
+                        // If no PDF application is available,
+                        // open the PDF URL in a browser.
+                        Intent browserIntent = new Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse(url)
+                        );
+
+                        startActivity(browserIntent);
+                    }
+
+                    return true;
+                }
+
                 return false;
             }
 
             @Override
-            public void onPageFinished(WebView view, String url) {
+            public boolean shouldOverrideUrlLoading(
+                    WebView view,
+                    String url) {
+
+                if (url != null &&
+                    url.toLowerCase().endsWith(".pdf")) {
+
+                    try {
+                        Intent intent = new Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse(url)
+                        );
+
+                        startActivity(intent);
+
+                    } catch (Exception e) {
+
+                        Intent browserIntent = new Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse(url)
+                        );
+
+                        startActivity(browserIntent);
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            @Override
+            public void onPageFinished(
+                    WebView view,
+                    String url) {
+
                 super.onPageFinished(view, url);
 
-                // Show the website.
                 view.setVisibility(View.VISIBLE);
 
-                // Remove the launch screen.
                 if (launchScreen != null) {
                     launchScreen.setVisibility(View.GONE);
                 }
@@ -83,12 +142,15 @@ public class MainActivity extends Activity {
                 )
         );
 
-        // Launch screen.
         launchScreen = new ImageView(this);
         launchScreen.setBackgroundColor(Color.WHITE);
         launchScreen.setImageResource(R.drawable.app_icon);
-        launchScreen.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        launchScreen.setPadding(70, 70, 70, 70);
+        launchScreen.setScaleType(
+                ImageView.ScaleType.CENTER_INSIDE
+        );
+        launchScreen.setPadding(
+                70, 70, 70, 70
+        );
 
         FrameLayout.LayoutParams launchParams =
                 new FrameLayout.LayoutParams(
@@ -98,14 +160,21 @@ public class MainActivity extends Activity {
 
         launchParams.gravity = Gravity.CENTER;
 
-        container.addView(launchScreen, launchParams);
+        container.addView(
+                launchScreen,
+                launchParams
+        );
 
         setContentView(container);
 
         if (savedInstanceState == null) {
+
             webView.loadUrl(START_URL);
+
         } else {
+
             webView.restoreState(savedInstanceState);
+
             webView.setVisibility(View.VISIBLE);
             launchScreen.setVisibility(View.GONE);
         }
@@ -114,15 +183,21 @@ public class MainActivity extends Activity {
     @Override
     public void onBackPressed() {
 
-        if (webView != null && webView.canGoBack()) {
+        if (webView != null &&
+            webView.canGoBack()) {
+
             webView.goBack();
+
         } else {
+
             super.onBackPressed();
         }
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
+    protected void onSaveInstanceState(
+            Bundle outState) {
+
         if (webView != null) {
             webView.saveState(outState);
         }
@@ -134,6 +209,7 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
 
         if (webView != null) {
+
             webView.stopLoading();
             webView.destroy();
         }
