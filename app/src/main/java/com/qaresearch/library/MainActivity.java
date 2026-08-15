@@ -33,11 +33,16 @@ public class MainActivity extends Activity {
         webView = new WebView(this);
         webView.setBackgroundColor(Color.WHITE);
 
+        // Clear the old HTTP cache.
+        // This allows the updated WebP files to be downloaded.
+        webView.clearCache(true);
+
         WebSettings settings = webView.getSettings();
 
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
+
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         settings.setAllowFileAccess(true);
@@ -105,6 +110,7 @@ public class MainActivity extends Activity {
                 )
         );
 
+        // Launch screen
         launchScreen = new ImageView(this);
         launchScreen.setBackgroundColor(Color.WHITE);
         launchScreen.setImageResource(R.drawable.app_icon);
@@ -135,6 +141,7 @@ public class MainActivity extends Activity {
         } else {
 
             webView.restoreState(savedInstanceState);
+
             webView.setVisibility(View.VISIBLE);
             launchScreen.setVisibility(View.GONE);
         }
@@ -146,9 +153,7 @@ public class MainActivity extends Activity {
             return false;
         }
 
-        String lowerUrl = url.toLowerCase();
-
-        return lowerUrl.contains(".pdf");
+        return url.toLowerCase().contains(".pdf");
     }
 
     private void downloadPdf(String url) {
