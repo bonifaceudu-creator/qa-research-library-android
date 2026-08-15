@@ -1,16 +1,15 @@
 package com.qaresearch.library;
 
 import android.app.Activity;
+import android.app.DownloadManager;
 import android.os.Bundle;
-import android.content.ActivityNotFoundException;
-import android.content.Intent;
+import android.os.Environment;
 import android.graphics.Color;
 import android.net.Uri;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.Toast;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -39,8 +38,6 @@ public class MainActivity extends Activity {
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
-
-        // Keep normal WebView caching.
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         settings.setAllowFileAccess(true);
@@ -50,8 +47,6 @@ public class MainActivity extends Activity {
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
 
-        // Prevent target="_blank" links from creating
-        // an unsupported second WebView window.
         settings.setSupportMultipleWindows(false);
         settings.setJavaScriptCanOpenWindowsAutomatically(false);
 
@@ -67,7 +62,7 @@ public class MainActivity extends Activity {
                 String url = request.getUrl().toString();
 
                 if (isPdf(url)) {
-                    openPdf(url);
+                    downloadPdf(url);
                     return true;
                 }
 
@@ -80,7 +75,7 @@ public class MainActivity extends Activity {
                     String url) {
 
                 if (isPdf(url)) {
-                    openPdf(url);
+                    downloadPdf(url);
                     return true;
                 }
 
@@ -110,16 +105,13 @@ public class MainActivity extends Activity {
                 )
         );
 
-        // Launch screen
         launchScreen = new ImageView(this);
         launchScreen.setBackgroundColor(Color.WHITE);
         launchScreen.setImageResource(R.drawable.app_icon);
         launchScreen.setScaleType(
                 ImageView.ScaleType.CENTER_INSIDE
         );
-        launchScreen.setPadding(
-                70, 70, 70, 70
-        );
+        launchScreen.setPadding(70, 70, 70, 70);
 
         FrameLayout.LayoutParams launchParams =
                 new FrameLayout.LayoutParams(
@@ -143,7 +135,6 @@ public class MainActivity extends Activity {
         } else {
 
             webView.restoreState(savedInstanceState);
-
             webView.setVisibility(View.VISIBLE);
             launchScreen.setVisibility(View.GONE);
         }
@@ -155,66 +146,46 @@ public class MainActivity extends Activity {
             return false;
         }
 
-        try {
-            Uri uri = Uri.parse(url);
+        String lowerUrl = url.toLowerCase();
 
-            String path = uri.getPath();
-
-            return path != null &&
-                    path.toLowerCase().endsWith(".pdf");
-
-        } catch (Exception e) {
-
-            return url.toLowerCase().contains(".pdf");
-        }
+        return lowerUrl.contains(".pdf");
     }
 
-    private void openPdf(String url) {
+    private void downloadPdf(String url) {
 
         try {
 
-            Uri pdfUri = Uri.parse(url);
+            Uri uri = Uri.parse(url);
 
-            // First try Chrome because it can display
-            // online PDF files.
-            Intent chromeIntent = new Intent(
-                    Intent.ACTION_VIEW,
-                    pdfUri
+            DownloadManager.Request request =
+                    new DownloadManager.Request(uri);
+
+            request.setTitle("QA Research Library PDF");
+            request.setDescription("Downloading document...");
+
+            request.setNotificationVisibility(
+                    DownloadManager.Request
+                            .VISIBILITY_VISIBLE_NOTIFY_COMPLETED
             );
 
-            chromeIntent.setPackage("com.android.chrome");
+            request.setDestinationInExternalPublicDir(
+                    Environment.DIRECTORY_DOWNLOADS,
+                    "QA_Research_Library_Document.pdf"
+            );
 
-            try {
+            request.setMimeType("application/pdf");
 
-                startActivity(chromeIntent);
+            DownloadManager manager =
+                    (DownloadManager) getSystemService(
+                            DOWNLOAD_SERVICE
+                    );
 
-            } catch (ActivityNotFoundException e) {
-
-                // If Chrome isn't available, let Android
-                // choose another suitable application.
-                Intent genericIntent = new Intent(
-                        Intent.ACTION_VIEW,
-                        pdfUri
-                );
-
-                startActivity(genericIntent);
+            if (manager != null) {
+                manager.enqueue(request);
             }
 
-        } catch (ActivityNotFoundException e) {
-
-            Toast.makeText(
-                    this,
-                    "No application is available to open this PDF.",
-                    Toast.LENGTH_LONG
-            ).show();
-
         } catch (Exception e) {
-
-            Toast.makeText(
-                    this,
-                    "Unable to open the PDF.",
-                    Toast.LENGTH_LONG
-            ).show();
+            e.printStackTrace();
         }
     }
 
@@ -247,7 +218,6 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
 
         if (webView != null) {
-
             webView.stopLoading();
             webView.destroy();
         }
