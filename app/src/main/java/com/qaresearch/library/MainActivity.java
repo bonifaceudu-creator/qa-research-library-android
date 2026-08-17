@@ -1,9 +1,9 @@
 package com.qaresearch.library;
 
 import android.app.Activity;
-import android.app.DownloadManager;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
 import android.os.Bundle;
-import android.os.Environment;
 import android.graphics.Color;
 import android.net.Uri;
 import android.view.Gravity;
