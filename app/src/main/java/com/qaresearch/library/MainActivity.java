@@ -156,43 +156,51 @@ public class MainActivity extends Activity {
         return url.toLowerCase().contains(".pdf");
     }
 
-    private void downloadPdf(String url) {
+private void downloadPdf(String url) {
 
+    try {
+
+        Uri uri = Uri.parse(url);
+
+        Intent intent = new Intent(
+                Intent.ACTION_VIEW,
+                uri
+        );
+
+        intent.setDataAndType(
+                uri,
+                "application/pdf"
+        );
+
+        intent.addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK
+        );
+
+        startActivity(intent);
+
+    } catch (ActivityNotFoundException e) {
+
+        // If no PDF viewer is installed,
+        // open the PDF in the browser instead.
         try {
 
-            Uri uri = Uri.parse(url);
-
-            DownloadManager.Request request =
-                    new DownloadManager.Request(uri);
-
-            request.setTitle("QA Research Library PDF");
-            request.setDescription("Downloading document...");
-
-            request.setNotificationVisibility(
-                    DownloadManager.Request
-                            .VISIBILITY_VISIBLE_NOTIFY_COMPLETED
+            Intent browserIntent = new Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse(url)
             );
 
-            request.setDestinationInExternalPublicDir(
-                    Environment.DIRECTORY_DOWNLOADS,
-                    "QA_Research_Library_Document.pdf"
-            );
+            startActivity(browserIntent);
 
-            request.setMimeType("application/pdf");
+        } catch (Exception browserException) {
 
-            DownloadManager manager =
-                    (DownloadManager) getSystemService(
-                            DOWNLOAD_SERVICE
-                    );
-
-            if (manager != null) {
-                manager.enqueue(request);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
+            browserException.printStackTrace();
         }
+
+    } catch (Exception e) {
+
+        e.printStackTrace();
     }
+}
 
     @Override
     public void onBackPressed() {
