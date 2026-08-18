@@ -1,15 +1,20 @@
 package com.qaresearch.library;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
-import android.content.Intent;
+import android.app.DownloadManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -18,7 +23,7 @@ import android.webkit.WebViewClient;
 public class MainActivity extends Activity {
 
     private WebView webView;
-    private ImageView launchScreen;
+    private View launchScreen;
 
     private static final String START_URL =
             "https://bonifaceudu-creator.github.io/qa-research-library-app/";
@@ -27,14 +32,21 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // =========================================================
+        // MAIN CONTAINER
+        // =========================================================
+
         FrameLayout container = new FrameLayout(this);
         container.setBackgroundColor(Color.WHITE);
+
+        // =========================================================
+        // WEBVIEW
+        // =========================================================
 
         webView = new WebView(this);
         webView.setBackgroundColor(Color.WHITE);
 
-        // Clear the old HTTP cache.
-        // This allows the updated WebP files to be downloaded.
+        // Clear old HTTP cache so updated WebP images are used.
         webView.clearCache(true);
 
         WebSettings settings = webView.getSettings();
@@ -56,6 +68,10 @@ public class MainActivity extends Activity {
         settings.setJavaScriptCanOpenWindowsAutomatically(false);
 
         webView.setVisibility(View.INVISIBLE);
+
+        // =========================================================
+        // WEBVIEW CLIENT
+        // =========================================================
 
         webView.setWebViewClient(new WebViewClient() {
 
@@ -94,6 +110,7 @@ public class MainActivity extends Activity {
 
                 super.onPageFinished(view, url);
 
+                // Show the website after the first page has loaded.
                 view.setVisibility(View.VISIBLE);
 
                 if (launchScreen != null) {
@@ -110,29 +127,222 @@ public class MainActivity extends Activity {
                 )
         );
 
-        // Launch screen
-        launchScreen = new ImageView(this);
-        launchScreen.setBackgroundColor(Color.WHITE);
-        launchScreen.setImageResource(R.drawable.app_icon);
-        launchScreen.setScaleType(
-                ImageView.ScaleType.CENTER_INSIDE
-        );
-        launchScreen.setPadding(70, 70, 70, 70);
+        // =========================================================
+        // PROFESSIONAL BRANDED SPLASH SCREEN
+        // =========================================================
 
-        FrameLayout.LayoutParams launchParams =
+        LinearLayout splashLayout = new LinearLayout(this);
+
+        splashLayout.setOrientation(LinearLayout.VERTICAL);
+        splashLayout.setGravity(Gravity.CENTER);
+        splashLayout.setBackgroundColor(Color.rgb(6, 42, 82));
+        splashLayout.setPadding(40, 40, 40, 40);
+
+        // ---------------------------------------------------------
+        // LOGO
+        // ---------------------------------------------------------
+
+        ImageView logo = new ImageView(this);
+
+        logo.setImageResource(R.drawable.app_icon);
+        logo.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+
+        int logoSize = dpToPx(125);
+
+        LinearLayout.LayoutParams logoParams =
+                new LinearLayout.LayoutParams(
+                        logoSize,
+                        logoSize
+                );
+
+        logoParams.gravity = Gravity.CENTER;
+        logoParams.bottomMargin = dpToPx(22);
+
+        splashLayout.addView(logo, logoParams);
+
+        // ---------------------------------------------------------
+        // QA & RESEARCH
+        // ---------------------------------------------------------
+
+        TextView title = new TextView(this);
+
+        title.setText("QA & RESEARCH");
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(24);
+        title.setTypeface(
+                Typeface.create(
+                        Typeface.DEFAULT,
+                        Typeface.BOLD
+                )
+        );
+        title.setGravity(Gravity.CENTER);
+        title.setLetterSpacing(0.08f);
+
+        splashLayout.addView(
+                title,
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+        );
+
+        // ---------------------------------------------------------
+        // DIGITAL LIBRARY
+        // ---------------------------------------------------------
+
+        TextView subtitle = new TextView(this);
+
+        subtitle.setText("DIGITAL LIBRARY");
+        subtitle.setTextColor(Color.rgb(143, 201, 244));
+        subtitle.setTextSize(13);
+        subtitle.setTypeface(
+                Typeface.create(
+                        Typeface.DEFAULT,
+                        Typeface.BOLD
+                )
+        );
+        subtitle.setGravity(Gravity.CENTER);
+        subtitle.setLetterSpacing(0.15f);
+
+        LinearLayout.LayoutParams subtitleParams =
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+
+        subtitleParams.topMargin = dpToPx(5);
+
+        splashLayout.addView(
+                subtitle,
+                subtitleParams
+        );
+
+        // ---------------------------------------------------------
+        // DIVIDER
+        // ---------------------------------------------------------
+
+        View divider = new View(this);
+
+        divider.setBackgroundColor(
+                Color.rgb(143, 201, 244)
+        );
+
+        LinearLayout.LayoutParams dividerParams =
+                new LinearLayout.LayoutParams(
+                        dpToPx(70),
+                        dpToPx(1)
+                );
+
+        dividerParams.gravity = Gravity.CENTER;
+        dividerParams.topMargin = dpToPx(22);
+        dividerParams.bottomMargin = dpToPx(18);
+
+        splashLayout.addView(
+                divider,
+                dividerParams
+        );
+
+        // ---------------------------------------------------------
+        // DEPARTMENT
+        // ---------------------------------------------------------
+
+        TextView department = new TextView(this);
+
+        department.setText(
+                "QUALITY ASSURANCE & RESEARCH DEPARTMENT"
+        );
+
+        department.setTextColor(
+                Color.rgb(210, 225, 239)
+        );
+
+        department.setTextSize(10);
+
+        department.setGravity(Gravity.CENTER);
+
+        splashLayout.addView(
+                department,
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+        );
+
+        // ---------------------------------------------------------
+        // LOCATION
+        // ---------------------------------------------------------
+
+        TextView location = new TextView(this);
+
+        location.setText("AJAOKUTA STEEL PLANT");
+
+        location.setTextColor(
+                Color.rgb(170, 195, 217)
+        );
+
+        location.setTextSize(10);
+
+        location.setGravity(Gravity.CENTER);
+
+        LinearLayout.LayoutParams locationParams =
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+
+        locationParams.topMargin = dpToPx(5);
+
+        splashLayout.addView(
+                location,
+                locationParams
+        );
+
+        // ---------------------------------------------------------
+        // LOADING INDICATOR
+        // ---------------------------------------------------------
+
+        ProgressBar progressBar = new ProgressBar(this);
+
+        progressBar.setIndeterminate(true);
+
+        LinearLayout.LayoutParams progressParams =
+                new LinearLayout.LayoutParams(
+                        dpToPx(32),
+                        dpToPx(32)
+                );
+
+        progressParams.gravity = Gravity.CENTER;
+        progressParams.topMargin = dpToPx(35);
+
+        splashLayout.addView(
+                progressBar,
+                progressParams
+        );
+
+        launchScreen = splashLayout;
+
+        FrameLayout.LayoutParams splashParams =
                 new FrameLayout.LayoutParams(
                         FrameLayout.LayoutParams.MATCH_PARENT,
                         FrameLayout.LayoutParams.MATCH_PARENT
                 );
 
-        launchParams.gravity = Gravity.CENTER;
+        splashParams.gravity = Gravity.CENTER;
 
         container.addView(
                 launchScreen,
-                launchParams
+                splashParams
         );
 
+        // =========================================================
+        // SET CONTENT VIEW
+        // =========================================================
+
         setContentView(container);
+
+        // =========================================================
+        // LOAD WEBSITE
+        // =========================================================
 
         if (savedInstanceState == null) {
 
@@ -147,6 +357,10 @@ public class MainActivity extends Activity {
         }
     }
 
+    // =============================================================
+    // PDF DETECTION
+    // =============================================================
+
     private boolean isPdf(String url) {
 
         if (url == null) {
@@ -156,51 +370,56 @@ public class MainActivity extends Activity {
         return url.toLowerCase().contains(".pdf");
     }
 
-private void downloadPdf(String url) {
+    // =============================================================
+    // PDF DOWNLOAD
+    // =============================================================
 
-    try {
+    private void downloadPdf(String url) {
 
-        Uri uri = Uri.parse(url);
-
-        Intent intent = new Intent(
-                Intent.ACTION_VIEW,
-                uri
-        );
-
-        intent.setDataAndType(
-                uri,
-                "application/pdf"
-        );
-
-        intent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK
-        );
-
-        startActivity(intent);
-
-    } catch (ActivityNotFoundException e) {
-
-        // If no PDF viewer is installed,
-        // open the PDF in the browser instead.
         try {
 
-            Intent browserIntent = new Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse(url)
+            Uri uri = Uri.parse(url);
+
+            DownloadManager.Request request =
+                    new DownloadManager.Request(uri);
+
+            request.setTitle("QA Research Library PDF");
+
+            request.setDescription(
+                    "Downloading document..."
             );
 
-            startActivity(browserIntent);
+            request.setNotificationVisibility(
+                    DownloadManager.Request
+                            .VISIBILITY_VISIBLE_NOTIFY_COMPLETED
+            );
 
-        } catch (Exception browserException) {
+            request.setDestinationInExternalPublicDir(
+                    Environment.DIRECTORY_DOWNLOADS,
+                    "QA_Research_Library_Document.pdf"
+            );
 
-            browserException.printStackTrace();
+            request.setMimeType("application/pdf");
+
+            DownloadManager manager =
+                    (DownloadManager) getSystemService(
+                            DOWNLOAD_SERVICE
+                    );
+
+            if (manager != null) {
+                manager.enqueue(request);
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
         }
-
-    } catch (Exception e) {
-
-        e.printStackTrace();
     }
-}
+
+    // =============================================================
+    // ANDROID BACK BUTTON
+    // =============================================================
 
     @Override
     public void onBackPressed() {
@@ -213,8 +432,13 @@ private void downloadPdf(String url) {
         } else {
 
             super.onBackPressed();
+
         }
     }
+
+    // =============================================================
+    // SAVE WEBVIEW STATE
+    // =============================================================
 
     @Override
     protected void onSaveInstanceState(
@@ -227,14 +451,34 @@ private void downloadPdf(String url) {
         super.onSaveInstanceState(outState);
     }
 
+    // =============================================================
+    // CLEAN UP
+    // =============================================================
+
     @Override
     protected void onDestroy() {
 
         if (webView != null) {
+
             webView.stopLoading();
             webView.destroy();
+
         }
 
         super.onDestroy();
+    }
+
+    // =============================================================
+    // DP → PIXELS
+    // =============================================================
+
+    private int dpToPx(int dp) {
+
+        float density =
+                getResources()
+                        .getDisplayMetrics()
+                        .density;
+
+        return Math.round(dp * density);
     }
 }
