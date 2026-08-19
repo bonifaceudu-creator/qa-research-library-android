@@ -1,61 +1,86 @@
 package com.qaresearch.library;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.app.DownloadManager;
-import android.os.Bundle;
-import android.os.Environment;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.animation.AlphaAnimation;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.os.Handler;
 
 public class MainActivity extends Activity {
 
     private WebView webView;
     private View launchScreen;
 
-    private Handler splashHandler = new Handler();
-
     private boolean pageLoaded = false;
-    private boolean minimumTimePassed = false;
+    private boolean minimumTimeReached = false;
 
-    private static final long SPLASH_DURATION = 3500;
+    private static final long SPLASH_DURATION = 4500;
 
     private static final String START_URL =
             "https://bonifaceudu-creator.github.io/qa-research-library-app/";
+
+    private final Handler splashHandler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // =========================================================
-        // MAIN CONTAINER
-        // =========================================================
+        /*
+         * =========================================================
+         * PREVENT WHITE FLASH
+         * =========================================================
+         */
+
+        Window window = getWindow();
+
+        window.setStatusBarColor(Color.rgb(6, 42, 82));
+        window.setNavigationBarColor(Color.rgb(6, 42, 82));
+
+        window.setBackgroundDrawable(
+                new ColorDrawable(Color.rgb(6, 42, 82))
+        );
+
+        /*
+         * =========================================================
+         * MAIN CONTAINER
+         * =========================================================
+         */
 
         FrameLayout container = new FrameLayout(this);
-        container.setBackgroundColor(Color.WHITE);
 
-        // =========================================================
-        // WEBVIEW
-        // =========================================================
+        container.setBackgroundColor(
+                Color.rgb(6, 42, 82)
+        );
+
+        /*
+         * =========================================================
+         * WEBVIEW
+         * =========================================================
+         */
 
         webView = new WebView(this);
+
         webView.setBackgroundColor(Color.WHITE);
 
-        // Clear old cache so updated WebP images are used.
         webView.clearCache(true);
 
         WebSettings settings = webView.getSettings();
@@ -64,7 +89,9 @@ public class MainActivity extends Activity {
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
 
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        settings.setCacheMode(
+                WebSettings.LOAD_DEFAULT
+        );
 
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
@@ -76,12 +103,17 @@ public class MainActivity extends Activity {
         settings.setSupportMultipleWindows(false);
         settings.setJavaScriptCanOpenWindowsAutomatically(false);
 
-        // Keep website hidden while splash is displayed.
+        /*
+         * Keep website hidden while splash is displayed.
+         */
+
         webView.setVisibility(View.INVISIBLE);
 
-        // =========================================================
-        // WEBVIEW CLIENT
-        // =========================================================
+        /*
+         * =========================================================
+         * WEBVIEW CLIENT
+         * =========================================================
+         */
 
         webView.setWebViewClient(new WebViewClient() {
 
@@ -90,10 +122,13 @@ public class MainActivity extends Activity {
                     WebView view,
                     WebResourceRequest request) {
 
-                String url = request.getUrl().toString();
+                String url =
+                        request.getUrl().toString();
 
                 if (isPdf(url)) {
+
                     openPdf(url);
+
                     return true;
                 }
 
@@ -106,7 +141,9 @@ public class MainActivity extends Activity {
                     String url) {
 
                 if (isPdf(url)) {
+
                     openPdf(url);
+
                     return true;
                 }
 
@@ -122,9 +159,18 @@ public class MainActivity extends Activity {
 
                 pageLoaded = true;
 
+                /*
+                 * The splash does NOT disappear immediately.
+                 * It waits for the minimum display time.
+                 */
+
                 checkSplashReady();
             }
         });
+
+        /*
+         * Add WebView.
+         */
 
         container.addView(
                 webView,
@@ -134,53 +180,91 @@ public class MainActivity extends Activity {
                 )
         );
 
-        // =========================================================
-        // PROFESSIONAL BRANDED SPLASH SCREEN
-        // =========================================================
+        /*
+         * =========================================================
+         * PROFESSIONAL SPLASH SCREEN
+         * =========================================================
+         */
 
-        LinearLayout splashLayout = new LinearLayout(this);
+        LinearLayout splashLayout =
+                new LinearLayout(this);
 
-        splashLayout.setOrientation(LinearLayout.VERTICAL);
-        splashLayout.setGravity(Gravity.CENTER);
-        splashLayout.setBackgroundColor(Color.rgb(6, 42, 82));
-        splashLayout.setPadding(
-                dpToPx(30),
-                dpToPx(30),
-                dpToPx(30),
-                dpToPx(30)
+        splashLayout.setOrientation(
+                LinearLayout.VERTICAL
         );
 
-        // ---------------------------------------------------------
-        // LARGE LOGO
-        // ---------------------------------------------------------
+        splashLayout.setGravity(
+                Gravity.CENTER
+        );
 
-        ImageView logo = new ImageView(this);
+        splashLayout.setBackgroundColor(
+                Color.rgb(6, 42, 82)
+        );
 
-        logo.setImageResource(R.drawable.app_icon);
-        logo.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        splashLayout.setPadding(
+                dpToPx(25),
+                dpToPx(25),
+                dpToPx(25),
+                dpToPx(25)
+        );
 
-        // Increased from 125dp to 170dp.
-        int logoSize = dpToPx(170);
+        /*
+         * =========================================================
+         * LOGO
+         * =========================================================
+         *
+         * Uses the EXISTING app_icon resource.
+         *
+         * FIT_CENTER prevents the logo from being cropped.
+         */
+
+        ImageView logo =
+                new ImageView(this);
+
+        logo.setImageResource(
+                R.drawable.app_icon
+        );
+
+        logo.setScaleType(
+                ImageView.ScaleType.FIT_CENTER
+        );
+
+        int logoWidth = dpToPx(210);
+        int logoHeight = dpToPx(210);
 
         LinearLayout.LayoutParams logoParams =
                 new LinearLayout.LayoutParams(
-                        logoSize,
-                        logoSize
+                        logoWidth,
+                        logoHeight
                 );
 
         logoParams.gravity = Gravity.CENTER;
-        logoParams.bottomMargin = dpToPx(18);
 
-        splashLayout.addView(logo, logoParams);
+        logoParams.bottomMargin =
+                dpToPx(24);
 
-        // ---------------------------------------------------------
-        // QA & RESEARCH
-        // ---------------------------------------------------------
+        splashLayout.addView(
+                logo,
+                logoParams
+        );
 
-        TextView title = new TextView(this);
+        /*
+         * =========================================================
+         * QA & RESEARCH
+         * =========================================================
+         */
 
-        title.setText("QA & RESEARCH");
-        title.setTextColor(Color.WHITE);
+        TextView title =
+                new TextView(this);
+
+        title.setText(
+                "QA & RESEARCH"
+        );
+
+        title.setTextColor(
+                Color.WHITE
+        );
+
         title.setTextSize(24);
 
         title.setTypeface(
@@ -190,7 +274,10 @@ public class MainActivity extends Activity {
                 )
         );
 
-        title.setGravity(Gravity.CENTER);
+        title.setGravity(
+                Gravity.CENTER
+        );
+
         title.setLetterSpacing(0.08f);
 
         splashLayout.addView(
@@ -201,14 +288,23 @@ public class MainActivity extends Activity {
                 )
         );
 
-        // ---------------------------------------------------------
-        // DIGITAL LIBRARY
-        // ---------------------------------------------------------
+        /*
+         * =========================================================
+         * DIGITAL LIBRARY
+         * =========================================================
+         */
 
-        TextView subtitle = new TextView(this);
+        TextView subtitle =
+                new TextView(this);
 
-        subtitle.setText("DIGITAL LIBRARY");
-        subtitle.setTextColor(Color.rgb(143, 201, 244));
+        subtitle.setText(
+                "DIGITAL LIBRARY"
+        );
+
+        subtitle.setTextColor(
+                Color.rgb(143, 201, 244)
+        );
+
         subtitle.setTextSize(13);
 
         subtitle.setTypeface(
@@ -218,7 +314,10 @@ public class MainActivity extends Activity {
                 )
         );
 
-        subtitle.setGravity(Gravity.CENTER);
+        subtitle.setGravity(
+                Gravity.CENTER
+        );
+
         subtitle.setLetterSpacing(0.15f);
 
         LinearLayout.LayoutParams subtitleParams =
@@ -227,18 +326,22 @@ public class MainActivity extends Activity {
                         ViewGroup.LayoutParams.WRAP_CONTENT
                 );
 
-        subtitleParams.topMargin = dpToPx(5);
+        subtitleParams.topMargin =
+                dpToPx(5);
 
         splashLayout.addView(
                 subtitle,
                 subtitleParams
         );
 
-        // ---------------------------------------------------------
-        // DIVIDER
-        // ---------------------------------------------------------
+        /*
+         * =========================================================
+         * DIVIDER
+         * =========================================================
+         */
 
-        View divider = new View(this);
+        View divider =
+                new View(this);
 
         divider.setBackgroundColor(
                 Color.rgb(143, 201, 244)
@@ -250,20 +353,28 @@ public class MainActivity extends Activity {
                         dpToPx(1)
                 );
 
-        dividerParams.gravity = Gravity.CENTER;
-        dividerParams.topMargin = dpToPx(22);
-        dividerParams.bottomMargin = dpToPx(18);
+        dividerParams.gravity =
+                Gravity.CENTER;
+
+        dividerParams.topMargin =
+                dpToPx(22);
+
+        dividerParams.bottomMargin =
+                dpToPx(18);
 
         splashLayout.addView(
                 divider,
                 dividerParams
         );
 
-        // ---------------------------------------------------------
-        // DEPARTMENT
-        // ---------------------------------------------------------
+        /*
+         * =========================================================
+         * DEPARTMENT
+         * =========================================================
+         */
 
-        TextView department = new TextView(this);
+        TextView department =
+                new TextView(this);
 
         department.setText(
                 "QUALITY ASSURANCE & RESEARCH DEPARTMENT"
@@ -274,7 +385,10 @@ public class MainActivity extends Activity {
         );
 
         department.setTextSize(10);
-        department.setGravity(Gravity.CENTER);
+
+        department.setGravity(
+                Gravity.CENTER
+        );
 
         splashLayout.addView(
                 department,
@@ -284,20 +398,28 @@ public class MainActivity extends Activity {
                 )
         );
 
-        // ---------------------------------------------------------
-        // LOCATION
-        // ---------------------------------------------------------
+        /*
+         * =========================================================
+         * LOCATION
+         * =========================================================
+         */
 
-        TextView location = new TextView(this);
+        TextView location =
+                new TextView(this);
 
-        location.setText("AJAOKUTA STEEL PLANT");
+        location.setText(
+                "AJAOKUTA STEEL PLANT"
+        );
 
         location.setTextColor(
                 Color.rgb(170, 195, 217)
         );
 
         location.setTextSize(10);
-        location.setGravity(Gravity.CENTER);
+
+        location.setGravity(
+                Gravity.CENTER
+        );
 
         LinearLayout.LayoutParams locationParams =
                 new LinearLayout.LayoutParams(
@@ -305,22 +427,30 @@ public class MainActivity extends Activity {
                         ViewGroup.LayoutParams.WRAP_CONTENT
                 );
 
-        locationParams.topMargin = dpToPx(5);
+        locationParams.topMargin =
+                dpToPx(5);
 
         splashLayout.addView(
                 location,
                 locationParams
         );
 
-        // ---------------------------------------------------------
-        // SLOGAN
-        // ---------------------------------------------------------
+        /*
+         * =========================================================
+         * ANIMATED SLOGAN
+         * =========================================================
+         */
 
-        TextView slogan = new TextView(this);
+        TextView slogan =
+                new TextView(this);
 
         slogan.setText("");
-        slogan.setTextColor(Color.WHITE);
-        slogan.setTextSize(11);
+
+        slogan.setTextColor(
+                Color.WHITE
+        );
+
+        slogan.setTextSize(13);
 
         slogan.setTypeface(
                 Typeface.create(
@@ -329,7 +459,10 @@ public class MainActivity extends Activity {
                 )
         );
 
-        slogan.setGravity(Gravity.CENTER);
+        slogan.setGravity(
+                Gravity.CENTER
+        );
+
         slogan.setLetterSpacing(0.08f);
 
         LinearLayout.LayoutParams sloganParams =
@@ -338,18 +471,25 @@ public class MainActivity extends Activity {
                         ViewGroup.LayoutParams.WRAP_CONTENT
                 );
 
-        sloganParams.topMargin = dpToPx(28);
+        sloganParams.topMargin =
+                dpToPx(60);
+
+        sloganParams.bottomMargin =
+                dpToPx(22);
 
         splashLayout.addView(
                 slogan,
                 sloganParams
         );
 
-        // ---------------------------------------------------------
-        // LOADING INDICATOR
-        // ---------------------------------------------------------
+        /*
+         * =========================================================
+         * LOADING INDICATOR
+         * =========================================================
+         */
 
-        ProgressBar progressBar = new ProgressBar(this);
+        ProgressBar progressBar =
+                new ProgressBar(this);
 
         progressBar.setIndeterminate(true);
 
@@ -359,19 +499,22 @@ public class MainActivity extends Activity {
                         dpToPx(32)
                 );
 
-        progressParams.gravity = Gravity.CENTER;
-        progressParams.topMargin = dpToPx(25);
+        progressParams.gravity =
+                Gravity.CENTER;
 
         splashLayout.addView(
                 progressBar,
                 progressParams
         );
 
-        // =========================================================
-        // SAVE SPLASH SCREEN
-        // =========================================================
+        /*
+         * =========================================================
+         * SAVE SPLASH VIEW
+         * =========================================================
+         */
 
-        launchScreen = splashLayout;
+        launchScreen =
+                splashLayout;
 
         FrameLayout.LayoutParams splashParams =
                 new FrameLayout.LayoutParams(
@@ -379,22 +522,35 @@ public class MainActivity extends Activity {
                         FrameLayout.LayoutParams.MATCH_PARENT
                 );
 
-        splashParams.gravity = Gravity.CENTER;
+        splashParams.gravity =
+                Gravity.CENTER;
 
         container.addView(
                 launchScreen,
                 splashParams
         );
 
-        // =========================================================
-        // SET CONTENT VIEW
-        // =========================================================
+        /*
+         * =========================================================
+         * SET CONTENT VIEW
+         * =========================================================
+         */
 
         setContentView(container);
 
-        // =========================================================
-        // START SPLASH TIMER
-        // =========================================================
+        /*
+         * =========================================================
+         * ANIMATE SLOGAN
+         * =========================================================
+         */
+
+        animateSlogan(slogan);
+
+        /*
+         * =========================================================
+         * MINIMUM SPLASH DISPLAY TIME
+         * =========================================================
+         */
 
         splashHandler.postDelayed(
                 new Runnable() {
@@ -402,7 +558,7 @@ public class MainActivity extends Activity {
                     @Override
                     public void run() {
 
-                        minimumTimePassed = true;
+                        minimumTimeReached = true;
 
                         checkSplashReady();
                     }
@@ -411,125 +567,194 @@ public class MainActivity extends Activity {
                 SPLASH_DURATION
         );
 
-        // =========================================================
-        // START SLOGAN ANIMATION
-        // =========================================================
-
-        animateSlogan(slogan);
-
-        // =========================================================
-        // LOAD WEBSITE
-        // =========================================================
+        /*
+         * =========================================================
+         * LOAD WEBSITE
+         * =========================================================
+         */
 
         if (savedInstanceState == null) {
 
-            webView.loadUrl(START_URL);
+            webView.loadUrl(
+                    START_URL
+            );
 
         } else {
 
-            webView.restoreState(savedInstanceState);
+            webView.restoreState(
+                    savedInstanceState
+            );
 
             pageLoaded = true;
-            minimumTimePassed = true;
 
-            webView.setVisibility(View.VISIBLE);
-            launchScreen.setVisibility(View.GONE);
+            minimumTimeReached = true;
+
+            webView.setVisibility(
+                    View.VISIBLE
+            );
+
+            launchScreen.setVisibility(
+                    View.GONE
+            );
         }
     }
 
-    // =============================================================
-    // SLOGAN LETTER-BY-LETTER ANIMATION
-    // =============================================================
+    /*
+     * =============================================================
+     * ANIMATED SLOGAN
+     * =============================================================
+     */
 
-    private void animateSlogan(final TextView slogan) {
+    private void animateSlogan(
+            final TextView slogan) {
 
         final String text =
                 "THE BEDROCK OF INDUSTRIALIZATION";
 
-        final Handler handler = new Handler();
+        final Handler handler =
+                new Handler();
+
+        final int[] index = {0};
 
         handler.postDelayed(
                 new Runnable() {
 
-                    int position = 0;
-
                     @Override
                     public void run() {
 
-                        if (position <= text.length()) {
+                        if (index[0] <= text.length()) {
 
                             slogan.setText(
-                                    text.substring(0, position)
+                                    text.substring(
+                                            0,
+                                            index[0]
+                                    )
                             );
 
-                            position++;
+                            index[0]++;
 
                             handler.postDelayed(
                                     this,
-                                    70
+                                    65
                             );
                         }
                     }
 
                 },
-                700
+                900
         );
     }
 
-    // =============================================================
-    // CHECK WHETHER SPLASH CAN DISAPPEAR
-    // =============================================================
+    /*
+     * =============================================================
+     * SPLASH CONTROL
+     * =============================================================
+     */
 
     private void checkSplashReady() {
 
-        if (pageLoaded && minimumTimePassed) {
+        if (!pageLoaded ||
+                !minimumTimeReached) {
 
-            webView.setVisibility(View.VISIBLE);
-
-            launchScreen.animate()
-                    .alpha(0f)
-                    .setDuration(500)
-                    .withEndAction(
-                            new Runnable() {
-
-                                @Override
-                                public void run() {
-
-                                    launchScreen.setVisibility(
-                                            View.GONE
-                                    );
-
-                                    launchScreen.setAlpha(1f);
-                                }
-                            }
-                    )
-                    .start();
+            return;
         }
+
+        if (launchScreen == null) {
+
+            return;
+        }
+
+        /*
+         * Show the homepage.
+         */
+
+        webView.setVisibility(
+                View.VISIBLE
+        );
+
+        /*
+         * Smoothly fade the splash away.
+         */
+
+        AlphaAnimation fade =
+                new AlphaAnimation(
+                        1.0f,
+                        0.0f
+                );
+
+        fade.setDuration(500);
+
+        fade.setFillAfter(true);
+
+        fade.setAnimationListener(
+                new android.view.animation.Animation.AnimationListener() {
+
+                    @Override
+                    public void onAnimationStart(
+                            android.view.animation.Animation animation) {
+                    }
+
+                    @Override
+                    public void onAnimationEnd(
+                            android.view.animation.Animation animation) {
+
+                        launchScreen.setVisibility(
+                                View.GONE
+                        );
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(
+                            android.view.animation.Animation animation) {
+                    }
+                }
+        );
+
+        launchScreen.startAnimation(
+                fade
+        );
     }
 
-    // =============================================================
-    // PDF DETECTION
-    // =============================================================
+    /*
+     * =============================================================
+     * PDF DETECTION
+     * =============================================================
+     */
 
     private boolean isPdf(String url) {
 
-        return url != null &&
-                url.toLowerCase().contains(".pdf");
+        if (url == null) {
+
+            return false;
+        }
+
+        return url
+                .toLowerCase()
+                .contains(".pdf");
     }
 
-    // =============================================================
-    // OPEN PDF
-    // =============================================================
+    /*
+     * =============================================================
+     * PDF OPENING
+     * =============================================================
+     *
+     * First tries to open the PDF using an Android PDF viewer/browser.
+     *
+     * If no PDF application is available, it falls back to
+     * DownloadManager.
+     */
 
     private void openPdf(String url) {
 
         try {
 
-            Uri uri = Uri.parse(url);
+            Uri uri =
+                    Uri.parse(url);
 
-            Intent intent = new Intent(
-                    Intent.ACTION_VIEW
-            );
+            Intent intent =
+                    new Intent(
+                            Intent.ACTION_VIEW
+                    );
 
             intent.setDataAndType(
                     uri,
@@ -544,34 +769,70 @@ public class MainActivity extends Activity {
 
         } catch (Exception e) {
 
-            e.printStackTrace();
-
-            try {
-
-                Uri uri = Uri.parse(url);
-
-                Intent browserIntent =
-                        new Intent(
-                                Intent.ACTION_VIEW,
-                                uri
-                        );
-
-                browserIntent.addFlags(
-                        Intent.FLAG_ACTIVITY_NEW_TASK
-                );
-
-                startActivity(browserIntent);
-
-            } catch (Exception browserException) {
-
-                browserException.printStackTrace();
-            }
+            downloadPdf(url);
         }
     }
 
-    // =============================================================
-    // ANDROID BACK BUTTON
-    // =============================================================
+    /*
+     * =============================================================
+     * PDF DOWNLOAD FALLBACK
+     * =============================================================
+     */
+
+    private void downloadPdf(String url) {
+
+        try {
+
+            Uri uri =
+                    Uri.parse(url);
+
+            DownloadManager.Request request =
+                    new DownloadManager.Request(uri);
+
+            request.setTitle(
+                    "QA Research Library PDF"
+            );
+
+            request.setDescription(
+                    "Downloading document..."
+            );
+
+            request.setNotificationVisibility(
+                    DownloadManager.Request
+                            .VISIBILITY_VISIBLE_NOTIFY_COMPLETED
+            );
+
+            request.setDestinationInExternalPublicDir(
+                    Environment.DIRECTORY_DOWNLOADS,
+                    "QA_Research_Library_Document.pdf"
+            );
+
+            request.setMimeType(
+                    "application/pdf"
+            );
+
+            DownloadManager manager =
+                    (DownloadManager)
+                            getSystemService(
+                                    DOWNLOAD_SERVICE
+                            );
+
+            if (manager != null) {
+
+                manager.enqueue(request);
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+    }
+
+    /*
+     * =============================================================
+     * ANDROID BACK BUTTON
+     * =============================================================
+     */
 
     @Override
     public void onBackPressed() {
@@ -587,31 +848,40 @@ public class MainActivity extends Activity {
         }
     }
 
-    // =============================================================
-    // SAVE WEBVIEW STATE
-    // =============================================================
+    /*
+     * =============================================================
+     * SAVE WEBVIEW STATE
+     * =============================================================
+     */
 
     @Override
     protected void onSaveInstanceState(
             Bundle outState) {
 
         if (webView != null) {
-            webView.saveState(outState);
+
+            webView.saveState(
+                    outState
+            );
         }
 
-        super.onSaveInstanceState(outState);
+        super.onSaveInstanceState(
+                outState
+        );
     }
 
-    // =============================================================
-    // CLEAN UP
-    // =============================================================
+    /*
+     * =============================================================
+     * CLEAN UP
+     * =============================================================
+     */
 
     @Override
     protected void onDestroy() {
 
-        if (splashHandler != null) {
-            splashHandler.removeCallbacksAndMessages(null);
-        }
+        splashHandler.removeCallbacksAndMessages(
+                null
+        );
 
         if (webView != null) {
 
@@ -622,9 +892,11 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
-    // =============================================================
-    // DP TO PIXELS
-    // =============================================================
+    /*
+     * =============================================================
+     * DP TO PIXELS
+     * =============================================================
+     */
 
     private int dpToPx(int dp) {
 
@@ -633,6 +905,8 @@ public class MainActivity extends Activity {
                         .getDisplayMetrics()
                         .density;
 
-        return Math.round(dp * density);
+        return Math.round(
+                dp * density
+        );
     }
 }
