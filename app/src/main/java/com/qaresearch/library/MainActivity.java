@@ -1,6 +1,7 @@
 package com.qaresearch.library;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.app.DownloadManager;
 import android.os.Bundle;
 import android.os.Environment;
@@ -92,7 +93,7 @@ public class MainActivity extends Activity {
                 String url = request.getUrl().toString();
 
                 if (isPdf(url)) {
-                    downloadPdf(url);
+                    openPdf(url);
                     return true;
                 }
 
@@ -105,7 +106,7 @@ public class MainActivity extends Activity {
                     String url) {
 
                 if (isPdf(url)) {
-                    downloadPdf(url);
+                    openPdf(url);
                     return true;
                 }
 
@@ -143,14 +144,14 @@ public class MainActivity extends Activity {
         splashLayout.setGravity(Gravity.CENTER);
         splashLayout.setBackgroundColor(Color.rgb(6, 42, 82));
         splashLayout.setPadding(
-                dpToPx(40),
-                dpToPx(40),
-                dpToPx(40),
-                dpToPx(40)
+                dpToPx(30),
+                dpToPx(30),
+                dpToPx(30),
+                dpToPx(30)
         );
 
         // ---------------------------------------------------------
-        // LOGO
+        // LARGE LOGO
         // ---------------------------------------------------------
 
         ImageView logo = new ImageView(this);
@@ -158,7 +159,8 @@ public class MainActivity extends Activity {
         logo.setImageResource(R.drawable.app_icon);
         logo.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
 
-        int logoSize = dpToPx(125);
+        // Increased from 125dp to 170dp.
+        int logoSize = dpToPx(170);
 
         LinearLayout.LayoutParams logoParams =
                 new LinearLayout.LayoutParams(
@@ -167,7 +169,7 @@ public class MainActivity extends Activity {
                 );
 
         logoParams.gravity = Gravity.CENTER;
-        logoParams.bottomMargin = dpToPx(22);
+        logoParams.bottomMargin = dpToPx(18);
 
         splashLayout.addView(logo, logoParams);
 
@@ -428,7 +430,6 @@ public class MainActivity extends Activity {
             webView.restoreState(savedInstanceState);
 
             pageLoaded = true;
-
             minimumTimePassed = true;
 
             webView.setVisibility(View.VISIBLE);
@@ -512,60 +513,59 @@ public class MainActivity extends Activity {
 
     private boolean isPdf(String url) {
 
-        if (url == null) {
-            return false;
-        }
-
-        return url.toLowerCase().contains(".pdf");
+        return url != null &&
+                url.toLowerCase().contains(".pdf");
     }
 
     // =============================================================
-    // PDF DOWNLOAD
+    // OPEN PDF
     // =============================================================
 
-    private void downloadPdf(String url) {
+    private void openPdf(String url) {
 
         try {
 
             Uri uri = Uri.parse(url);
 
-            DownloadManager.Request request =
-                    new DownloadManager.Request(uri);
-
-            request.setTitle(
-                    "QA Research Library PDF"
+            Intent intent = new Intent(
+                    Intent.ACTION_VIEW
             );
 
-            request.setDescription(
-                    "Downloading document..."
-            );
-
-            request.setNotificationVisibility(
-                    DownloadManager.Request
-                            .VISIBILITY_VISIBLE_NOTIFY_COMPLETED
-            );
-
-            request.setDestinationInExternalPublicDir(
-                    Environment.DIRECTORY_DOWNLOADS,
-                    "QA_Research_Library_Document.pdf"
-            );
-
-            request.setMimeType(
+            intent.setDataAndType(
+                    uri,
                     "application/pdf"
             );
 
-            DownloadManager manager =
-                    (DownloadManager) getSystemService(
-                            DOWNLOAD_SERVICE
-                    );
+            intent.addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK
+            );
 
-            if (manager != null) {
-                manager.enqueue(request);
-            }
+            startActivity(intent);
 
         } catch (Exception e) {
 
             e.printStackTrace();
+
+            try {
+
+                Uri uri = Uri.parse(url);
+
+                Intent browserIntent =
+                        new Intent(
+                                Intent.ACTION_VIEW,
+                                uri
+                        );
+
+                browserIntent.addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK
+                );
+
+                startActivity(browserIntent);
+
+            } catch (Exception browserException) {
+
+                browserException.printStackTrace();
+            }
         }
     }
 
