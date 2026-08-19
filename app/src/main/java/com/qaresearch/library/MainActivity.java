@@ -1,7 +1,3 @@
-Complete Replacement "MainActivity.java"
-
-Replace the entire contents of your current "MainActivity.java" with the code below.
-
 package com.qaresearch.library;
 
 import android.app.Activity;
