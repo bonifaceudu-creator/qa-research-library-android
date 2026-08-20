@@ -1,14 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+    <style name="AppTheme"
+           parent="android:style/Theme.Material.Light.NoActionBar">
+
         <item name="android:fontFamily">sans</item>
-        <item name="android:colorAccent">#1B3A5F</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:statusBarColor">#FFFFFF</item>
-        <item name="android:navigationBarColor">#FFFFFF</item>
+
+        <item name="android:colorAccent">#8FC9F4</item>
+
+        <!-- Full-screen startup -->
+        <item name="android:windowFullscreen">true</item>
+
+        <!-- Dark blue window shown BEFORE MainActivity appears -->
+        <item name="android:windowBackground">#062A52</item>
+
+        <!-- Keep status/navigation areas blue -->
+        <item name="android:statusBarColor">#062A52</item>
+        <item name="android:navigationBarColor">#062A52</item>
+
+        <!-- White status-bar icons -->
+        <item name="android:windowLightStatusBar">false</item>
+
         <item name="android:windowActionModeOverlay">true</item>
+
         <item name="android:windowNoTitle">true</item>
+
     </style>
 
 </resources>
